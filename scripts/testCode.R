@@ -1,15 +1,6 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-Test
 
-## Loading and preprocessing the data
-
-```{r}
 # 1. Reading in the data:
+
 # Data downloaded on 08/15/2015
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", 
               "data/data.zip", method ="curl")
@@ -18,12 +9,7 @@ unzip("data/data.zip", exdir = "data")
 data <- read.csv("data/activity.csv")
 data$date <- as.Date(as.character(data$date))
 data$steps <- as.numeric(data$steps)
-```
 
-
-## What is mean total number of steps taken per day?
-
-```{r, warning=FALSE}
 # 2. Total steps per day -> histogram -> report mean/median
 library("plyr")
 library("ggplot2")
@@ -42,37 +28,21 @@ histogram <- ggplot(daySums, aes(steps)) +
     ylab("Number of Days") +
     ggtitle("Histrogram of Total Steps per Day")
 histogram
-```
 
-```{r, results='asis',comment=NA}
 ## Calculating Median and Mean
 values <- data.frame(Mean = mean(daySums$steps, na.rm = T), 
                      Median = median(daySums$steps, na.rm = T))
 
-valTable <- xtable(values)
-print(valTable, type="html", include.rowname=F)
-```
+valTable <- xtable(values, type = "html")
+print(valTable)
 
-## What is the average daily activity pattern?
-
-```{r}
 # 3. Time series of 5 min periods averaged accross all days
 ## Calculating interval means over all days
 meanInt <- ddply(data[,c("interval","steps")], .(interval), summarise,
                  MeanSteps = mean(steps, na.rm = T))
 plot(meanInt$interval,meanInt$MeanSteps, type="l")
-```
 
-```{r, results='asis'}
 ## Determining the highest averaging interval
 maximum <- meanInt[meanInt$MeanSteps == max(meanInt$MeanSteps),]
 maxTable <- xtable(maximum)
-print(maxTable, type="html", include.rowname=F)
-```
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+print(maxTable)
