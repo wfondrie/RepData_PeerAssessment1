@@ -46,3 +46,51 @@ plot(meanInt$interval,meanInt$MeanSteps, type="l")
 maximum <- meanInt[meanInt$MeanSteps == max(meanInt$MeanSteps),]
 maxTable <- xtable(maximum)
 print(maxTable)
+
+# 4. Imputing NA values
+## Counting number of NA's
+numNA <- sum(is.na(data$steps))
+
+## imputing the NA values
+data <- ddply(data, .(date,interval), mutate, 
+               filledSteps =  if(is.na(steps)){
+                   meanInt[interval == meanInt$interval,"MeanSteps"]
+                   } else { steps })
+
+## Total steps
+daySumsFilled <- ddply(data[,c("date","filledSteps")], .(date), summarise,
+                 TotalSteps = sum(filledSteps))
+names(daySumsFilled)[2] <- "steps"
+
+## Making histogram
+histogram2 <- ggplot(daySumsFilled, aes(steps)) + 
+    geom_bar(binwidth=1000) + # geom_bar in ggplot makes a histogram with one variable
+    xlab("Total Steps in a Day") +
+    ylab("Number of Days") +
+    ggtitle("Histrogram of Total Steps per Day")
+histogram2
+
+## Calculating Median and Mean
+values[2,] <- data.frame(Mean = mean(daySums$steps, na.rm = T), 
+                     Median = median(daySums$steps, na.rm = T))
+row.names(values) <- c("With NA's", "NA's Imputed")
+
+valTable <- xtable(values)
+print(valTable, type="html")
+
+
+# 5. Weekdays vs Weekends
+data$day <- weekdays(data$date)
+data$weekday <- rep("Weekday",nrow(data))
+data$weekday[data$day == "Saturday" | data$day == "Sunday"] <- "Weekend"
+data$weekday <- as.factor(data$weekday)
+avgStepsWeek <- ddply(data, .(interval, weekday), summarise,
+                      avgSteps = mean(filledSteps))
+
+plot <- ggplot(avgStepsWeek, aes(x=interval, y=avgSteps)) + 
+    facet_grid(weekday ~ .) + 
+    geom_line() +
+    xlab("Time interval") +
+    ylab("Average number of steops") +
+    ggtitle("Average Steps on Weekdays and Weekends")
+plot
